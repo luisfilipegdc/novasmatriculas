@@ -464,13 +464,17 @@ export default function AdminPanel({ initial }: { initial: DashboardState }) {
 
         <section className="card">
           <h2>Metas mensais de captação</h2>
-          <p className="hint">Um mês por linha, na ordem em que aparecem no gráfico.</p>
+          <p className="hint">
+            Um mês por linha, na ordem do gráfico. A planilha usa a data do aceite do contrato, que pode não
+            coincidir com o mês em que a matrícula foi computada; nesse caso, preencha <strong>Realizado</strong>{" "}
+            com o número correto (vazio = usa a planilha). Este slide fica desligado por padrão em “Slides exibidos”.
+          </p>
           <div className="months">
             <div className="month-row" style={{ fontWeight: 600, fontSize: 13, color: "#3b4559" }}>
               <span>Mês (aaaa-mm)</span>
               <span>Rótulo</span>
               <span>Meta</span>
-              <span>Matr. no mês</span>
+              <span>Realizado</span>
               <span />
             </div>
             {s.metas.mensal.map((m, i) => (
@@ -482,7 +486,12 @@ export default function AdminPanel({ initial }: { initial: DashboardState }) {
                   value={m.meta}
                   onChange={(e) => setMes(i, { meta: Number(e.target.value || 0) })}
                 />
-                <span style={{ textAlign: "center" }}>{fmt(rel?.captacaoPorMes[m.key] ?? 0)}</span>
+                <input
+                  type="number"
+                  value={m.realizado ?? ""}
+                  placeholder={`Planilha: ${fmt(rel?.captacaoPorMes[m.key] ?? 0)}`}
+                  onChange={(e) => setMes(i, { realizado: e.target.value === "" ? null : Number(e.target.value) })}
+                />
                 <button
                   className="btn small"
                   title="Remover"

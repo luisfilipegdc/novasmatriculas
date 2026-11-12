@@ -53,7 +53,9 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0); // conta trocas (para escolher a transição)
   const [paused, setPaused] = useState(false);
-  const [scale, setScale] = useState(1);
+  // Palco ocupa a tela inteira: escala pela menor dimensão e o lado que sobra
+  // vira área útil (sem faixas vazias nas laterais em TVs de outro formato).
+  const [box, setBox] = useState({ scale: 1, w: W, h: H });
   const [controls, setControls] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,7 +73,12 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
 
   /* ---- Escala do palco 1920x1080 para qualquer tela ---- */
   useEffect(() => {
-    const fit = () => setScale(Math.min(window.innerWidth / W, window.innerHeight / H));
+    const fit = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const scale = Math.min(vw / W, vh / H);
+      setBox({ scale, w: Math.ceil(vw / scale), h: Math.ceil(vh / scale) });
+    };
     fit();
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
@@ -180,9 +187,9 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
       <div
         className="stage"
         style={{
-          width: W,
-          height: H,
-          transform: `translate(-50%, -50%) scale(${scale})`,
+          width: box.w,
+          height: box.h,
+          transform: `translate(-50%, -50%) scale(${box.scale})`,
         }}
       >
         <AnimatePresence initial={false}>

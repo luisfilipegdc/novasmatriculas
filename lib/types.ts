@@ -74,6 +74,8 @@ export interface MesMeta {
   key: string; // yyyy-mm
   label: string;
   meta: number;
+  /** Valor informado manualmente; quando preenchido, substitui o da planilha. */
+  realizado?: number | null;
 }
 
 export interface DashboardState {
@@ -143,7 +145,7 @@ export function defaultState(): DashboardState {
       slides: {
         abertura: true,
         captacaoGeral: true,
-        captacaoMensal: true,
+        captacaoMensal: false,
         comparativo: true,
         rematriculaGeral: true,
         rematriculaSegmentos: true,

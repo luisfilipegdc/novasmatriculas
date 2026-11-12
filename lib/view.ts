@@ -62,7 +62,15 @@ export function buildView(s: DashboardState): DashboardView {
   const meses = s.metas.mensal;
   const porMes = rel?.captacaoPorMes ?? {};
   const mensal: BarItem[] = [];
-  if (meses.length) {
+  const manual = (m: { realizado?: number | null }) =>
+    typeof m.realizado === "number" && Number.isFinite(m.realizado) ? m.realizado : null;
+  if (meses.length && meses.every((m) => manual(m) !== null)) {
+    // Todos os meses informados manualmente: usa exatamente esses números.
+    meses.forEach((m) => {
+      const a = manual(m)!;
+      mensal.push({ label: m.label, atual: a, meta: m.meta, pct: m.meta ? a / m.meta : 0 });
+    });
+  } else if (meses.length) {
     const firstKey = meses[0].key;
     const lastKey = meses[meses.length - 1].key;
     const curKey = (s.dataAte || "").slice(0, 7);
@@ -79,13 +87,18 @@ export function buildView(s: DashboardState): DashboardView {
     };
     if (s.mensalModo === "mensal") {
       meses.forEach((m, i) => {
-        const a = countFor(i);
+        const a = manual(m) ?? countFor(i);
         mensal.push({ label: m.label, atual: a, meta: m.meta, pct: m.meta ? a / m.meta : 0 });
       });
     } else {
       // Acumulado: o excedente de um mês já encerrado é transportado para o seguinte.
       let saldo = 0;
       meses.forEach((m, i) => {
+        const fixo = manual(m);
+        if (fixo !== null) {
+          mensal.push({ label: m.label, atual: fixo, meta: m.meta, pct: m.meta ? fixo / m.meta : 0 });
+          return;
+        }
         saldo += countFor(i);
         const encerrado = curKey ? m.key < curKey : false;
         let a: number;

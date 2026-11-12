@@ -129,12 +129,17 @@ export function GoalBar({ m, theme, delay = D + 1 }: { m: Meta; theme: Theme; de
       >
         <motion.div
           className="goalbar-fill"
-          style={{ background: theme.bar, color: theme.barText, boxShadow: `0 0 60px ${theme.glow}` }}
+          style={{ backgroundColor: theme.bar, color: theme.barText, boxShadow: `0 0 60px ${theme.glow}` }}
           initial={{ width: "0%" }}
-          animate={{ width: `${Math.max(width, 2)}%` }}
+          animate={{ width: `${width}%` }}
           transition={{ delay, duration: 2.2, ease: EASE }}
         >
-          <div className="goalbar-stripes" />
+          <motion.div
+            className="goalbar-sheen"
+            initial={{ x: "-100%" }}
+            animate={{ x: "250%" }}
+            transition={{ delay: delay + 2.2, duration: 1.4, ease: "easeInOut" }}
+          />
           {width >= 45 && (
             <span className="goalbar-label">
               <AnimatedNumber value={pct * 100} suffix="%" delay={delay} duration={2.2} /> DA META
@@ -144,7 +149,7 @@ export function GoalBar({ m, theme, delay = D + 1 }: { m: Meta; theme: Theme; de
         {width < 45 && (
           <motion.span
             className="goalbar-label outside"
-            style={{ left: `calc(${Math.max(width, 2)}% + 28px)`, color: theme.text }}
+            style={{ left: `calc(${width}% + 28px)`, color: theme.text }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: delay + 0.4 }}
@@ -242,20 +247,33 @@ export function BarChart({
               <motion.div
                 className={`bar-fill ${done ? "done" : ""}`}
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.max(w, 0.6)}%` }}
+                animate={{ width: `${w}%` }}
                 transition={{ delay: d + 0.15, duration: 1.6, ease: EASE }}
               >
-                <span className="bar-pct">
-                  <AnimatedNumber value={it.pct * 100} suffix="%" delay={d + 0.15} duration={1.6} />
-                </span>
+                {w >= 14 && (
+                  <span className="bar-pct">
+                    <AnimatedNumber value={it.pct * 100} suffix="%" delay={d + 0.15} duration={1.6} />
+                  </span>
+                )}
               </motion.div>
+              {w < 14 && (
+                <motion.span
+                  className="bar-pct outside"
+                  style={{ left: `calc(${w}% + 18px)`, color: theme.text }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.9 }}
+                  transition={{ delay: d + 0.4, duration: 0.6 }}
+                >
+                  <AnimatedNumber value={it.pct * 100} suffix="%" delay={d + 0.15} duration={1.6} />
+                </motion.span>
+              )}
               {done && (
                 <motion.span
                   className="bar-check"
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: d + 1.6, type: "spring", stiffness: 300, damping: 12 }}
-                  style={{ left: `calc(${Math.max(w, 0.6)}% + 14px)` }}
+                  style={{ left: `calc(${w}% + 14px)` }}
                 >
                   ✓
                 </motion.span>
