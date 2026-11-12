@@ -36,7 +36,7 @@ export const SLIDES: SlideDef[] = [
           parts={[{ text: "Acompanhamento" }, { text: `Matrícula ${v.ano}`, hl: true, br: true }]}
         />
         <Subtitle theme={t} delay={D + 1.1}>
-          CAPTAÇÃO · REMATRÍCULA · NAC · INTEGRAL
+          CAPTAÇÃO · REMATRÍCULA
         </Subtitle>
         <motion.div
           className="cover-total"
@@ -48,7 +48,7 @@ export const SLIDES: SlideDef[] = [
             <span className="cover-num">
               <AnimatedNumber value={v.total.atual} delay={D + 1.6} duration={2.4} />
             </span>
-            <span className="cover-cap">alunos garantidos para {v.ano}</span>
+            <span className="cover-cap">estudantes para {v.ano}</span>
           </div>
         </motion.div>
         <Footnote theme={t}>{note(v)}</Footnote>
