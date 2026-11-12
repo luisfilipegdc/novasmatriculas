@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+.data
+.env*.local
+.env
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+# nunca versionar planilhas com dados de alunos
+*.xls
+*.xlsx
+*.csv
