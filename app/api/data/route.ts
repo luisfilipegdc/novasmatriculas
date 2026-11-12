@@ -31,10 +31,7 @@ export async function POST(req: Request) {
     await saveState(state);
   } catch (e) {
     console.error(e);
-    return NextResponse.json(
-      { error: "Falha ao salvar. Verifique se o Blob Store está conectado ao projeto na Vercel." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: `Falha ao salvar: ${(e as Error).message}` }, { status: 500 });
   }
   return NextResponse.json(state);
 }

@@ -118,7 +118,7 @@ export default function AdminPanel({ initial }: { initial: DashboardState }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(s),
       });
-      const body = await res.json();
+      const body = await res.json().catch(() => ({ error: `Erro ${res.status} do servidor` }));
       if (!res.ok) throw new Error(body.error ?? "Erro ao salvar");
       setS(body);
       setSaved(JSON.stringify(body));

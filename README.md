@@ -27,8 +27,9 @@ transições e animações. Um painel administrativo recebe as planilhas e atual
 2. Em **Settings → Environment Variables**, crie:
    - `ADMIN_PASSWORD`: senha de acesso ao `/admin`
    - `SESSION_SECRET`: uma string longa e aleatória
-3. Na aba **Storage**, crie um **Blob** store e conecte ao projeto. A Vercel cria a variável
-   `BLOB_READ_WRITE_TOKEN` automaticamente. É lá que os dados publicados ficam guardados.
+3. Na aba **Storage**, crie um **Blob** store (público ou privado) e conecte ao projeto
+   (Production e Preview). A Vercel cria `BLOB_STORE_ID` (OIDC) ou `BLOB_READ_WRITE_TOKEN`
+   automaticamente; os dois funcionam. É lá que os dados publicados ficam guardados.
 4. Faça **Redeploy** para aplicar as variáveis.
 5. Acesse `https://seu-projeto.vercel.app/admin`, entre com a senha e envie as planilhas.
 
