@@ -73,7 +73,7 @@ export const SLIDES: SlideDef[] = [
     render: (v, t) => (
       <div className="slide-inner">
         <Title theme={t} size={80} parts={[{ text: "Meta mensal de" }, { text: `CAPTAÇÃO ${v.ano}`, hl: true }]} />
-        <BarChart items={v.mensal} theme={t} rowHeight={v.mensal.length > 6 ? 70 : 92} />
+        <BarChart items={v.mensal} theme={t} rowHeight={v.mensal.length > 6 ? 60 : 74} />
         <Footnote theme={t}>{note(v)}</Footnote>
       </div>
     ),

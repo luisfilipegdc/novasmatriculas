@@ -304,7 +304,7 @@ export function Footnote({ children, theme }: { children: ReactNode; theme: Them
       className="footnote"
       style={{ color: theme.text }}
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 0.85, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: D + 1.2, duration: 0.8 }}
     >
       {children}
