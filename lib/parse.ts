@@ -124,8 +124,14 @@ function parseRelatorio(rows: Row[], fileName: string): RelatorioSource {
   return out;
 }
 
+/** Relação de Alunos: aceita o formato com "Turma Especial" (uma linha por
+ *  atividade) e o formato simples (Matrícula, Série, Situação, Nome Completo). */
+function findListaHeader(rows: Row[]) {
+  return findHeader(rows, ["Matrícula", "Turma Especial"]) ?? findHeader(rows, ["Matrícula", "Nome Completo"]);
+}
+
 function parseLista(rows: Row[], fileName: string): ListaSource {
-  const h = findHeader(rows, ["Matrícula", "Turma Especial"])!;
+  const h = findListaHeader(rows)!;
   const cMat = h.cols.get(norm("Matrícula"))!;
   const cTipo = h.cols.get(norm("Tipo de Matrícula")) ?? -1;
   const alunos = new Set<string>();
@@ -152,7 +158,8 @@ export async function parseFile(file: File, hint?: "nac" | "integral"): Promise<
   if (findHeader(rows, ["Tipo Aluno", "Matrícula Aluno"])) {
     return { kind: "relatorio", data: parseRelatorio(rows, file.name) };
   }
-  if (findHeader(rows, ["Matrícula", "Turma Especial"])) {
+  const lista = findListaHeader(rows);
+  if (lista) {
     const data = parseLista(rows, file.name);
     let kind: "nac" | "integral" | undefined = hint;
     if (!kind) {
@@ -160,12 +167,16 @@ export async function parseFile(file: File, hint?: "nac" | "integral"): Promise<
       if (n.includes("nac")) kind = "nac";
       else if (n.includes("integral")) kind = "integral";
     }
-    if (!kind) {
+    const cTurma = lista.cols.get(norm("Turma Especial"));
+    if (!kind && cTurma !== undefined) {
       // Heurística pelo conteúdo da coluna "Turma Especial"
-      const h = findHeader(rows, ["Matrícula", "Turma Especial"])!;
-      const c = h.cols.get(norm("Turma Especial"))!;
-      const sample = rows.slice(h.idx + 1, h.idx + 200).map((r) => norm(r[c])).join(" ");
+      const sample = rows.slice(lista.idx + 1, lista.idx + 200).map((r) => norm(r[cTurma])).join(" ");
       kind = /integral|bilingual/.test(sample) ? "integral" : "nac";
+    }
+    if (!kind) {
+      throw new Error(
+        `Não deu para saber se "${file.name}" é NAC ou Integral. Arraste-a no quadro "Relação de Alunos · NAC" ou "· Integral".`,
+      );
     }
     return { kind, data };
   }
