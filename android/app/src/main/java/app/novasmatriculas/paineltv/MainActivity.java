@@ -35,7 +35,9 @@ import android.widget.TextView;
  */
 public class MainActivity extends Activity {
 
-    static final String DEFAULT_URL = "https://novasmatriculas.vercel.app/?leve=1";
+    static final String DEFAULT_URL = "https://novasmatriculas-omega.vercel.app/?leve=1";
+    /** Endereço errado usado nas primeiras versões (outro projeto, sem dados). */
+    private static final String OLD_HOST = "://novasmatriculas.vercel.app";
     private static final String PREFS = "painel";
     private static final String KEY_URL = "url";
     private static final long RETRY_MS = 15_000;
@@ -145,7 +147,13 @@ public class MainActivity extends Activity {
 
     private String getUrl() {
         SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
-        return p.getString(KEY_URL, DEFAULT_URL);
+        String u = p.getString(KEY_URL, DEFAULT_URL);
+        if (u.contains(OLD_HOST)) {
+            // Corrige aparelhos que gravaram o endereço antigo
+            u = DEFAULT_URL;
+            p.edit().putString(KEY_URL, u).apply();
+        }
+        return u;
     }
 
     private void saveUrl(String url) {

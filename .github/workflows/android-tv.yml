@@ -49,4 +49,4 @@ jobs:
           body: |
             App do Painel de Matrículas para Chromecast com Google TV / Android TV.
 
-            Download direto na TV (app Downloader): **novasmatriculas.vercel.app/apk**
+            Download direto na TV (app Downloader): **novasmatriculas-omega.vercel.app/apk**

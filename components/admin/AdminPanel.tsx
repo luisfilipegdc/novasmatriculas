@@ -110,6 +110,14 @@ export default function AdminPanel({ initial }: { initial: DashboardState }) {
   }
 
   async function save() {
+    const semDados =
+      !s.sources.relatorio && !s.sources.nac && !s.sources.integral &&
+      !Object.values(s.overrides).some((v) => typeof v === "number");
+    if (
+      semDados &&
+      !window.confirm("Nenhuma planilha carregada. Publicar assim deixa a TV sem números. Continuar?")
+    )
+      return;
     setBusy(true);
     setMsg({ text: "Publicando…" });
     try {
