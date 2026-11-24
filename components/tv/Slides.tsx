@@ -6,6 +6,21 @@ import type { SlideKey } from "@/lib/types";
 import type { DashboardView } from "@/lib/view";
 import AnimatedNumber from "./AnimatedNumber";
 import { BarChart, D, Footnote, GoalBar, KpiCards, Subtitle, Title } from "./parts";
+import { useLite } from "./lite";
+
+function CoverLogo() {
+  const lite = useLite();
+  return (
+    <motion.img
+      src="/logo.png"
+      alt="Colégio Marista de Brasília"
+      className="cover-logo"
+      initial={lite ? { opacity: 0 } : { opacity: 0, scale: 0.6, filter: "blur(12px)" }}
+      animate={lite ? { opacity: 1 } : { opacity: 1, scale: 1, filter: "blur(0px)" }}
+      transition={{ delay: D, duration: lite ? 0.6 : 1.2, ease: [0.16, 1, 0.3, 1] }}
+    />
+  );
+}
 
 export interface SlideDef {
   key: SlideKey;
@@ -21,14 +36,7 @@ export const SLIDES: SlideDef[] = [
     theme: "navy",
     render: (v, t) => (
       <div className="slide-inner center">
-        <motion.img
-          src="/logo.png"
-          alt="Colégio Marista de Brasília"
-          className="cover-logo"
-          initial={{ opacity: 0, scale: 0.6, filter: "blur(12px)" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          transition={{ delay: D, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        />
+        <CoverLogo />
         <Title
           theme={t}
           size={118}

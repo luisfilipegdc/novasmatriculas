@@ -40,6 +40,17 @@ transições e animações. Um painel administrativo recebe as planilhas e atual
 - Teclas: `→`/`←` trocam o slide, `espaço` pausa.
 - A página pede para a tela não apagar (Wake Lock) e se recarrega sozinha a cada ~6 h.
 
+### Chromecast, TV Box e TVs mais fracas: modo leve
+
+Em aparelhos fracos as transições pesadas travam. O **modo leve** mantém o mesmo visual, mas
+usa só animações baratas (esmaecer e deslizar) e fundo parado.
+
+- **Automático:** liga sozinho quando o aparelho é reconhecido como TV/Chromecast, ou quando a
+  animação fica abaixo de 40 quadros por segundo nos primeiros segundos. Fica salvo no aparelho.
+- **Forçar:** abra `https://seu-projeto.vercel.app/?leve=1`. Para voltar ao completo, use `?leve=0`.
+  A escolha fica salva naquele aparelho.
+- Também dá para alternar com a tecla **L** ou pelo botão **⚡ Modo leve** que aparece ao mexer o mouse.
+
 ## Rodar localmente
 
 ```bash

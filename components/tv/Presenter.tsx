@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalizeState, type DashboardState } from "@/lib/types";
 import { buildView } from "@/lib/view";
 import { SLIDES, themeOf } from "./Slides";
+import { LITE_KEY, LiteContext, liteOverride, looksLikeWeakDevice, measureFps } from "./lite";
 
 const W = 1920;
 const H = 1080;
@@ -41,10 +42,16 @@ const TRANSITIONS: Variants[] = [
   },
 ];
 
+/* Modo leve: só opacidade (barato até em Chromecast). */
+const LITE_TRANSITION: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.7, ease: "easeOut" } },
+};
+const LITE_EXIT = { opacity: 0, transition: { duration: 0.5 } };
+
 const EXIT = {
   scale: 0.94,
   opacity: 0.4,
-  filter: "blur(6px)",
   transition: { duration: 1.1, ease: [0.77, 0, 0.18, 1] as const },
 };
 
@@ -58,6 +65,7 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
   const [box, setBox] = useState({ scale: 1, w: W, h: H });
   const [controls, setControls] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
+  const [lite, setLite] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedAt = useRef(Date.now());
 
@@ -83,6 +91,36 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
   }, []);
+
+  /* ---- Modo leve: URL/aparelho > tipo de aparelho > FPS medido ---- */
+  useEffect(() => {
+    const forced = liteOverride();
+    if (forced !== null) return setLite(forced);
+    if (looksLikeWeakDevice()) return setLite(true);
+    let alive = true;
+    // mede durante as primeiras animações; se engasgar, liga o modo leve
+    const t = setTimeout(async () => {
+      const fps = await measureFps(4000);
+      if (alive && fps < 40) {
+        setLite(true);
+        try {
+          localStorage.setItem(LITE_KEY, "1");
+        } catch {}
+      }
+    }, 300);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, []);
+
+  const toggleLite = () =>
+    setLite((v) => {
+      try {
+        localStorage.setItem(LITE_KEY, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
 
   /* ---- Relógio ---- */
   useEffect(() => {
@@ -144,6 +182,7 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
       else if (["ArrowLeft", "PageUp", "MediaTrackPrevious"].includes(e.key)) go(-1);
       else if (e.key === " " || e.key === "Enter" || e.key === "MediaPlayPause") setPaused((p) => !p);
       else if (e.key.toLowerCase() === "f") toggleFullscreen();
+      else if (e.key.toLowerCase() === "l") toggleLite();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -180,10 +219,15 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
     document.body.style.background = theme.bg;
   }, [theme.bg]);
 
-  const variants = TRANSITIONS[step % TRANSITIONS.length];
+  const variants = lite ? LITE_TRANSITION : TRANSITIONS[step % TRANSITIONS.length];
 
   return (
-    <div className={`tv-root ${controls ? "" : "hide-cursor"}`} onMouseMove={showControls} onClick={showControls}>
+    <LiteContext.Provider value={lite}>
+    <div
+      className={`tv-root ${controls ? "" : "hide-cursor"} ${lite ? "lite" : ""}`}
+      onMouseMove={showControls}
+      onClick={showControls}
+    >
       <div
         className="stage"
         style={{
@@ -201,9 +245,9 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
               variants={variants}
               initial="initial"
               animate="animate"
-              exit={EXIT}
+              exit={lite ? LITE_EXIT : EXIT}
             >
-              <Ambient bg={theme.bg} bg2={theme.bg2} text={theme.text} year={view.ano} />
+              <Ambient bg={theme.bg} bg2={theme.bg2} text={theme.text} year={view.ano} lite={lite} />
               {view.hasData || slide.key === "abertura" ? (
                 slide.render(view, theme)
               ) : (
@@ -221,14 +265,14 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
 
         {/* Faixa de luz que cruza a tela durante a troca */}
         <AnimatePresence>
-          <motion.div
+          {!lite && <motion.div
             key={`sweep-${step}`}
             className="sweep"
             style={{ background: `linear-gradient(90deg, transparent, ${theme.highlight}, transparent)` }}
             initial={{ x: "-40%", opacity: 0 }}
             animate={{ x: "140%", opacity: [0, 0.55, 0] }}
             transition={{ duration: 1.3, ease: [0.77, 0, 0.18, 1] }}
-          />
+          />}
         </AnimatePresence>
 
         {/* Rodapé fixo: indicador de slides + relógio */}
@@ -262,13 +306,41 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
         <button onClick={() => setPaused((p) => !p)}>{paused ? "▶ Continuar" : "❚❚ Pausar"}</button>
         <button onClick={() => go(1)} aria-label="Próximo">›</button>
         <button onClick={toggleFullscreen}>⛶ Tela cheia</button>
+        <button onClick={toggleLite}>{lite ? "✦ Modo completo" : "⚡ Modo leve"}</button>
       </div>
     </div>
+    </LiteContext.Provider>
   );
 }
 
 /* Fundo animado: bolhas de luz em movimento lento + marca d'água do ano. */
-function Ambient({ bg, bg2, text, year }: { bg: string; bg2: string; text: string; year: number }) {
+function Ambient({
+  bg,
+  bg2,
+  text,
+  year,
+  lite,
+}: {
+  bg: string;
+  bg2: string;
+  text: string;
+  year: number;
+  lite: boolean;
+}) {
+  if (lite) {
+    // Fundo estático: um único gradiente, sem nada se movendo.
+    return (
+      <div
+        className="ambient"
+        aria-hidden
+        style={{ background: `radial-gradient(ellipse at 15% 0%, ${bg2} 0%, ${bg} 55%)` }}
+      >
+        <div className="watermark static" style={{ WebkitTextStroke: `2px ${text}1a`, color: "transparent" }}>
+          {year}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="ambient" aria-hidden>
       <div className="blob b1" style={{ background: `radial-gradient(circle, ${bg2} 0%, transparent 65%)` }} />

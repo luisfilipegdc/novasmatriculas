@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import AnimatedNumber from "./AnimatedNumber";
+import { useLite } from "./lite";
 import type { Theme } from "@/lib/theme";
 import type { BarItem, Meta } from "@/lib/view";
 
@@ -21,6 +22,25 @@ export function Title({
   size?: number;
   delay?: number;
 }) {
+  const lite = useLite();
+  if (lite) {
+    return (
+      <motion.h1
+        className="tv-title"
+        style={{ fontSize: size, color: theme.text }}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: delay - 0.2, duration: 0.6, ease: "easeOut" }}
+      >
+        {parts.map((p, pi) => (
+          <span key={pi}>
+            {p.br ? <br /> : pi > 0 ? " " : null}
+            <span style={{ color: p.hl ? theme.highlight : undefined }}>{p.text}</span>
+          </span>
+        ))}
+      </motion.h1>
+    );
+  }
   let i = 0;
   return (
     <h1 className="tv-title" style={{ fontSize: size, color: theme.text }}>
@@ -50,12 +70,13 @@ export function Title({
 }
 
 export function Subtitle({ children, theme, delay = D + 0.4 }: { children: ReactNode; theme: Theme; delay?: number }) {
+  const lite = useLite();
   return (
     <motion.div
       className="tv-subtitle"
-      style={{ color: theme.highlight }}
-      initial={{ opacity: 0, letterSpacing: "0.6em" }}
-      animate={{ opacity: 1, letterSpacing: "0.08em" }}
+      style={{ color: theme.highlight, letterSpacing: lite ? "0.08em" : undefined }}
+      initial={lite ? { opacity: 0 } : { opacity: 0, letterSpacing: "0.6em" }}
+      animate={lite ? { opacity: 1 } : { opacity: 1, letterSpacing: "0.08em" }}
       transition={{ delay, duration: 1.2, ease: EASE }}
     >
       {children}
@@ -75,6 +96,7 @@ export function KpiCards({
   diffMode?: "falta" | "resultado";
   delay?: number;
 }) {
+  const lite = useLite();
   const diff = values[2];
   const ahead = diff >= 0;
   const thirdLabel = diffMode === "falta" ? (ahead ? "ACIMA DA META" : labels[2]) : labels[2];
@@ -94,20 +116,22 @@ export function KpiCards({
         <motion.div
           key={i}
           className={`kpi ${it.cls}`}
-          initial={{ opacity: 0, y: 80, rotateX: -35, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-          transition={{ delay: delay + i * 0.14, duration: 1, ease: EASE }}
+          initial={lite ? { opacity: 0, y: 40 } : { opacity: 0, y: 80, rotateX: -35, scale: 0.92 }}
+          animate={lite ? { opacity: 1, y: 0 } : { opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+          transition={{ delay: delay + i * (lite ? 0.1 : 0.14), duration: lite ? 0.6 : 1, ease: EASE }}
         >
           <div className="kpi-label">{it.label}</div>
           <div className="kpi-value">
             <AnimatedNumber value={it.value} signed={!!it.signed} delay={delay + 0.2 + i * 0.14} />
           </div>
-          <motion.div
-            className="kpi-shine"
-            initial={{ x: "-120%" }}
-            animate={{ x: "220%" }}
-            transition={{ delay: delay + 1.6 + i * 0.15, duration: 1.4, ease: "easeInOut" }}
-          />
+          {!lite && (
+            <motion.div
+              className="kpi-shine"
+              initial={{ x: "-120%" }}
+              animate={{ x: "220%" }}
+              transition={{ delay: delay + 1.6 + i * 0.15, duration: 1.4, ease: "easeInOut" }}
+            />
+          )}
         </motion.div>
       ))}
     </div>
@@ -119,6 +143,47 @@ export function GoalBar({ m, theme, delay = D + 1 }: { m: Meta; theme: Theme; de
   const pct = Math.max(0, m.pct);
   const width = Math.min(pct, 1) * 100;
   const done = pct >= 1;
+  const lite = useLite();
+  if (lite) {
+    // Barra cresce com transform (scaleX): não recalcula o layout a cada quadro.
+    const label = (
+      <>
+        <AnimatedNumber value={pct * 100} suffix="%" delay={delay} duration={1.4} /> DA META
+      </>
+    );
+    return (
+      <div className="goalbar-wrap">
+        <motion.div
+          className="goalbar-track"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: delay - 0.3, duration: 0.4 }}
+        >
+          <motion.div
+            className="goalbar-fill"
+            style={{ backgroundColor: theme.bar, width: `${width}%`, transformOrigin: "left center" }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay, duration: 1.4, ease: EASE }}
+          />
+          <motion.span
+            className={`goalbar-label ${width >= 45 ? "inside" : "outside"}`}
+            style={
+              width >= 45
+                ? { right: `calc(${100 - width}% + 46px)`, color: theme.barText }
+                : { left: `calc(${width}% + 28px)`, color: theme.text }
+            }
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: delay + 0.5, duration: 0.5 }}
+          >
+            {label}
+          </motion.span>
+        </motion.div>
+        {done && <Celebrate theme={theme} delay={delay + 1.4} />}
+      </div>
+    );
+  }
   return (
     <div className="goalbar-wrap">
       <motion.div
@@ -166,7 +231,8 @@ export function GoalBar({ m, theme, delay = D + 1 }: { m: Meta; theme: Theme; de
 /* ---------- Comemoração quando a meta é batida ---------- */
 const CONFETTI = ["#FFC000", "#ffffff", "#9BBB59", "#4F81BD", "#E36C0A", "#7660AE"];
 export function Celebrate({ theme, delay }: { theme: Theme; delay: number }) {
-  const pieces = Array.from({ length: 46 }, (_, i) => i);
+  const lite = useLite();
+  const pieces = lite ? [] : Array.from({ length: 46 }, (_, i) => i);
   return (
     <>
       <motion.div
@@ -215,6 +281,7 @@ export function BarChart({
   delay?: number;
   rowHeight?: number;
 }) {
+  const lite = useLite();
   const maxPct = Math.max(1, ...items.map((i) => i.pct));
   const scale = Math.min(maxPct, 1.25);
   return (
@@ -244,18 +311,41 @@ export function BarChart({
               {it.label}
             </motion.div>
             <div className="bar-track">
-              <motion.div
-                className={`bar-fill ${done ? "done" : ""}`}
-                initial={{ width: 0 }}
-                animate={{ width: `${w}%` }}
-                transition={{ delay: d + 0.15, duration: 1.6, ease: EASE }}
-              >
-                {w >= 14 && (
-                  <span className="bar-pct">
-                    <AnimatedNumber value={it.pct * 100} suffix="%" delay={d + 0.15} duration={1.6} />
-                  </span>
-                )}
-              </motion.div>
+              {lite ? (
+                <>
+                  <motion.div
+                    className={`bar-fill ${done ? "done" : ""}`}
+                    style={{ width: `${w}%`, transformOrigin: "left center" }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: d + 0.1, duration: 1.1, ease: EASE }}
+                  />
+                  {w >= 14 && (
+                    <motion.span
+                      className="bar-pct inside"
+                      style={{ right: `calc(${100 - w}% + 22px)` }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: d + 0.7, duration: 0.4 }}
+                    >
+                      {Math.round(it.pct * 100)}%
+                    </motion.span>
+                  )}
+                </>
+              ) : (
+                <motion.div
+                  className={`bar-fill ${done ? "done" : ""}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${w}%` }}
+                  transition={{ delay: d + 0.15, duration: 1.6, ease: EASE }}
+                >
+                  {w >= 14 && (
+                    <span className="bar-pct">
+                      <AnimatedNumber value={it.pct * 100} suffix="%" delay={d + 0.15} duration={1.6} />
+                    </span>
+                  )}
+                </motion.div>
+              )}
               {w < 14 && (
                 <motion.span
                   className="bar-pct outside"

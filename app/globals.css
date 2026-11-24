@@ -939,3 +939,53 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ============ MODO LEVE (Chromecast / TVs fracas) ============ */
+.lite .slide {
+  will-change: opacity;
+}
+.lite .watermark.static {
+  animation: none;
+}
+.lite .kpi,
+.lite .vs-card {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+.lite .vs-mid {
+  box-shadow: none;
+}
+.lite .vs-result.up {
+  box-shadow: none;
+}
+.lite .cover-total {
+  backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.12);
+}
+.lite .goalbar-track,
+.lite .bar-fill {
+  box-shadow: none;
+}
+.lite .goalbar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.lite .goalbar-label.inside,
+.lite .bar-pct.inside {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+}
+.lite .bar-track {
+  overflow: visible;
+}
+.lite .bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.lite .sweep,
+.lite .confetti {
+  display: none;
+}
