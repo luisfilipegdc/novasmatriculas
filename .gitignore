@@ -11,3 +11,10 @@ next-env.d.ts
 *.xls
 *.xlsx
 *.csv
+
+# Android
+android/.gradle
+android/build
+android/app/build
+android/local.properties
+*.apk

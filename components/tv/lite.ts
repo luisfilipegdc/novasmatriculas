@@ -28,7 +28,7 @@ export function liteOverride(): boolean | null {
 /** Aparelhos de TV conhecidos ou com pouco hardware. */
 export function looksLikeWeakDevice(): boolean {
   const ua = navigator.userAgent;
-  if (/CrKey|Chromecast|GoogleTV|Google TV|Android TV|AFT[A-Z]|SmartTV|SMART-TV|Tizen|Web0S|webOS|BRAVIA|HbbTV|NetCast|Roku|AppleTV/i.test(ua))
+  if (/PainelTV-Android|CrKey|Chromecast|GoogleTV|Google TV|Android TV|AFT[A-Z]|SmartTV|SMART-TV|Tizen|Web0S|webOS|BRAVIA|HbbTV|NetCast|Roku|AppleTV/i.test(ua))
     return true;
   const nav = navigator as Navigator & { deviceMemory?: number };
   if (nav.deviceMemory !== undefined && nav.deviceMemory <= 2) return true;

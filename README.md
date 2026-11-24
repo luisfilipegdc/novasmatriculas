@@ -72,3 +72,29 @@ Sem `BLOB_READ_WRITE_TOKEN`, os dados ficam em `.data/state.json`.
 | `lib/storage.ts` | Persistência (Vercel Blob ou arquivo local) |
 | `components/tv/` | Slides, transições e animações |
 | `components/admin/` | Painel administrativo |
+
+## App para Chromecast / Android TV
+
+O app (pasta `android/`) abre o painel em tela cheia, sem barra de endereço. Ele mantém a tela
+ligada, já liga o modo leve, tenta de novo sozinho se a internet cair e abre quando o aparelho liga.
+
+O APK é gerado automaticamente pelo GitHub Actions (workflow **APK Android TV**) a cada
+mudança na pasta `android/` e publicado em **Releases**. Link fixo: `novasmatriculas.vercel.app/apk`.
+
+### Instalar no Chromecast com Google TV
+
+1. **Ativar o modo desenvolvedor:** *Configurações → Sistema → Sobre*. Clique 7 vezes em
+   **Build do Android TV OS** até aparecer "Você agora é um desenvolvedor".
+2. Instale o app **Downloader** (by AFTVnews) pela Play Store da TV.
+3. *Configurações → Apps → Segurança e restrições → Fontes desconhecidas*: ative para o **Downloader**.
+4. Abra o Downloader, digite `novasmatriculas.vercel.app/apk` e confirme. Ele baixa e pede para instalar.
+5. O app **Painel Matrículas** aparece na tela inicial (em "Seus apps"). Abra-o.
+
+Para atualizar, repita o passo 4. A versão nova instala por cima.
+
+### Controle remoto no app
+
+- ◀ ▶ trocam de slide; **OK** pausa ou continua.
+- **Segurar OK por ~1 s** (ou botão MENU): configurações, onde se troca o endereço do painel.
+- O app tenta abrir sozinho quando o Chromecast liga. Alguns sistemas bloqueiam isso; nesse caso,
+  basta abrir pelo ícone.

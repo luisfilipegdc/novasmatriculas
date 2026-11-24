@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+// versionCode vem do número da execução no GitHub Actions (-PversionCode=N),
+// assim cada APK novo instala por cima do anterior.
+def vc = (project.findProperty('versionCode') ?: '1').toString().toInteger()
+
+android {
+    namespace 'app.novasmatriculas.paineltv'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.novasmatriculas.paineltv'
+        minSdk 23
+        targetSdk 34
+        versionCode vc
+        versionName "1.0.${vc}"
+    }
+
+    // Chave fixa (uso interno): garante que as atualizações instalem por cima.
+    signingConfigs {
+        painel {
+            storeFile file('painel.keystore')
+            storePassword 'painel-tv'
+            keyAlias 'painel'
+            keyPassword 'painel-tv'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.painel
+        }
+        debug {
+            signingConfig signingConfigs.painel
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
