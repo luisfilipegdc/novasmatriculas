@@ -27,10 +27,14 @@ const accessOrder = (): Access[] => [preferred, preferred === "private" ? "publi
 async function readBlob(): Promise<DashboardState | null> {
   const { get } = await import("@vercel/blob");
   let lastError: unknown = null;
+  let notFound = false;
   for (const access of accessOrder()) {
     try {
       const res = await get(PATHNAME, { access, useCache: false });
-      if (!res) return null; // ainda não publicado
+      if (!res) {
+        notFound = true; // tenta o outro tipo de acesso antes de concluir
+        continue;
+      }
       if (res.statusCode !== 200) continue;
       preferred = access;
       return normalizeState(await new Response(res.stream).json());
@@ -38,8 +42,10 @@ async function readBlob(): Promise<DashboardState | null> {
       lastError = e;
     }
   }
-  console.error("[storage] falha ao ler o Blob:", lastError);
-  return null;
+  if (notFound && !lastError) return null; // ainda não publicado
+  // Falha de leitura (ex.: credencial OIDC indisponível): lança o erro para
+  // que ele NÃO seja guardado no cache como se fosse "sem dados".
+  throw lastError ?? new Error("Blob indisponível");
 }
 
 async function readFromSource(): Promise<DashboardState | null> {
@@ -51,12 +57,32 @@ async function readFromSource(): Promise<DashboardState | null> {
   }
 }
 
-// O resultado fica em cache e só é recarregado quando o admin publica
-// (revalidateTag) — assim a TV pode consultar a cada minuto sem custo.
-const cachedRead = unstable_cache(readFromSource, [TAG], { tags: [TAG], revalidate: 600 });
+// Cache persistente do Next, renovado SOMENTE quando o admin publica
+// (revalidateTag). Sem renovação por tempo: a renovação em segundo plano roda
+// fora de uma requisição, onde a credencial OIDC do Blob não existe, e a
+// leitura falhava — as TVs recebiam "sem dados".
+const cachedRead = unstable_cache(readFromSource, [TAG, "v2"], { tags: [TAG], revalidate: false });
+
+// Último estado lido com sucesso nesta instância do servidor (rede de segurança).
+let lastGood: DashboardState | null = null;
 
 export async function getState(): Promise<DashboardState | null> {
-  return blobConfigured() ? cachedRead() : readFromSource();
+  if (!blobConfigured()) return readFromSource();
+  try {
+    const st = await cachedRead();
+    if (st) lastGood = st;
+    return st ?? lastGood;
+  } catch (e) {
+    console.error("[storage] falha ao ler o Blob (cache):", e);
+    try {
+      const st = await readFromSource(); // tentativa direta, dentro da requisição
+      if (st) lastGood = st;
+      return st ?? lastGood;
+    } catch (e2) {
+      console.error("[storage] falha ao ler o Blob (direto):", e2);
+      return lastGood;
+    }
+  }
 }
 
 export class StorageError extends Error {}

@@ -142,7 +142,12 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
         const res = await fetch("/api/data", { cache: "no-store" });
         if (!res.ok) return;
         const next = normalizeState(await res.json());
-        if (alive) setState((cur) => (cur.updatedAt === next.updatedAt ? cur : next));
+        // Só aceita dados mais novos: uma resposta vazia/antiga (falha momentânea
+        // do servidor) nunca apaga o que a TV já está mostrando.
+        if (alive)
+          setState((cur) =>
+            new Date(next.updatedAt).getTime() > new Date(cur.updatedAt).getTime() ? next : cur,
+          );
       } catch {
         /* sem rede: mantém os dados atuais */
       }
