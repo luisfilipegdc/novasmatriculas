@@ -21,6 +21,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Diagnóstico (?debug=1): carrega antes de tudo, em JS antigo */}
+        <script src="/diag.js" />
+      </head>
       <body>{children}</body>
     </html>
   );

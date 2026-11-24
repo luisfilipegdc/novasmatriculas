@@ -122,6 +122,11 @@ export default function Presenter({ initial }: { initial: DashboardState }) {
       return !v;
     });
 
+  /* ---- Sinaliza para o diagnóstico (?debug=1) que o React iniciou ---- */
+  useEffect(() => {
+    (window as unknown as { __painelOK?: boolean }).__painelOK = true;
+  }, []);
+
   /* ---- Relógio ---- */
   useEffect(() => {
     setNow(new Date());

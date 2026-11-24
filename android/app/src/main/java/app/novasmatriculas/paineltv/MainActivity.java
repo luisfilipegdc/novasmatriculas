@@ -227,11 +227,14 @@ public class MainActivity extends Activity {
                     saveUrl(input.getText().toString());
                     web.loadUrl(getUrl());
                 })
-                .setNeutralButton("Padrão", (d, w) -> {
+                .setNeutralButton("Recarregar padrão", (d, w) -> {
                     saveUrl(DEFAULT_URL);
                     web.loadUrl(getUrl());
                 })
-                .setNegativeButton("Recarregar", (d, w) -> web.reload())
+                .setNegativeButton("Diagnóstico", (d, w) -> {
+                    String u = getUrl();
+                    web.loadUrl(u + (u.contains("?") ? "&" : "?") + "debug=1");
+                })
                 .setOnDismissListener(d -> {
                     hideSystemUi();
                     web.requestFocus();
