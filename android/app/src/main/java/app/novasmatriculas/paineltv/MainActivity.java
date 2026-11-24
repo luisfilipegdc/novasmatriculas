@@ -16,6 +16,7 @@ import android.view.WindowManager;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -83,7 +84,9 @@ public class MainActivity extends Activity {
     private void createWebView() {
         web = new WebView(this);
         web.setBackgroundColor(Color.rgb(0, 54, 96));
-        web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        // Não forçar setLayerType(HARDWARE) na WebView: em vários aparelhos isso
+        // congela a imagem no primeiro quadro (conteúdo nunca aparece). A
+        // aceleração já vem ligada pelo manifest.
         web.setFocusable(true);
         web.setFocusableInTouchMode(true);
         web.setVerticalScrollBarEnabled(false);
@@ -98,6 +101,7 @@ public class MainActivity extends Activity {
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setUserAgentString(s.getUserAgentString() + " PainelTV-Android");
 
+        web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
